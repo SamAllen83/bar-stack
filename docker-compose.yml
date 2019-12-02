@@ -1,34 +1,11 @@
 version: '3'
 
 services:
-  consul-agent-1: &consul-agent
-    image: consul:latest
-    networks:
-      - consul-demo
-    command: "agent -retry-join consul-server-bootstrap -client 0.0.0.0"
-  consul-agent-2:
-    <<: *consul-agent
-  consul-agent-3:
-    <<: *consul-agent
-  consul-server-1: &consul-server
-    <<: *consul-agent
-    command: "agent -server -retry-join consul-server-bootstrap -client 0.0.0.0"
-  consul-server-2:
-    <<: *consul-server
-  consul-server-bootstrap:
-    <<: *consul-agent
-    ports:
-      - "8400:8400"
-      - "8500:8500"
-      - "8600:8600"
-      - "8600:8600/udp"
-    command: "agent -server -bootstrap-expect 3 -ui -client 0.0.0.0"
+#eventuate
   zookeeper:
     image: eventuateio/eventuate-zookeeper:0.4.0.RELEASE
     ports:
       - 2181:2181
-
-#eventuate
   kafka:
     image: eventuateio/eventuate-kafka:0.3.0.RELEASE
     ports:
@@ -39,7 +16,6 @@ services:
       - ADVERTISED_HOST_NAME=${DOCKER_HOST_IP}
       - KAFKA_HEAP_OPTS=-Xmx320m -Xms320m
       - ZOOKEEPER_SERVERS=zookeeper:2181
-
   mysql:
     image: eventuateio/eventuate-mysql:0.4.0.RELEASE
     ports:
@@ -48,7 +24,6 @@ services:
       - MYSQL_ROOT_PASSWORD=rootpassword
       - MYSQL_USER=mysqluser
       - MYSQL_PASSWORD=mysqlpw
-
   cdcservice:
     image: eventuateio/eventuate-cdc-service:0.2.0.RELEASE
     ports:
@@ -70,12 +45,21 @@ services:
       EVENTUATELOCAL_CDC_MAX_EVENTS_PER_POLLING: 1000
       EVENTUATELOCAL_CDC_MAX_ATTEMPTS_FOR_POLLING: 100
       EVENTUATELOCAL_CDC_POLLING_RETRY_INTERVAL_IN_MILLISECONDS: 500
-      EVENTUATELOCAL_CDC_READER_NAME: ${EVENTUATELOCAL_CDC_READER_NAME}
-      EVENTUATELOCAL_CDC_OFFSET_STORE_KEY: ${EVENTUATELOCAL_CDC_OFFSET_STORE_KEY}
-      EVENTUATELOCAL_CDC_MYSQL_BINLOG_CLIENT_UNIQUE_ID: ${EVENTUATELOCAL_CDC_MYSQL_BINLOG_CLIENT_UNIQUE_ID}
-      EVENTUATELOCAL_CDC_READ_OLD_DEBEZIUM_DB_OFFSET_STORAGE_TOPIC: ${EVENTUATELOCAL_CDC_READ_OLD_DEBEZIUM_DB_OFFSET_STORAGE_TOPIC}
+      EVENTUATELOCAL_CDC_READER_NAME: MySqlReader
+      EVENTUATELOCAL_CDC_OFFSET_STORE_KEY: MySqlBinlog
+      EVENTUATELOCAL_CDC_MYSQL_BINLOG_CLIENT_UNIQUE_ID: 1234567890
+      EVENTUATELOCAL_CDC_READ_OLD_DEBEZIUM_DB_OFFSET_STORAGE_TOPIC: "false"
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
       EVENTUATE_CDC_TYPE: EventuateLocal
 
-networks:
-  consul-demo:
+#Beverage Bot
+  config-server:
+    image: config-server:latest
+    ports:
+      - 8888:8888
+  bartender-api:
+    image: bartender-api:latest
+    links:
+      - config-server
+    ports:
+      - 8080:8080

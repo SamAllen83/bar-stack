@@ -1,0 +1,355 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    kompose.cmd: /snap/kompose/1/./kompose-linux-amd64 convert
+    kompose.version: 1.18.0 (06a2e56)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: zookeeper
+  name: zookeeper
+spec:
+  ports:
+    - name: "2181"
+      port: 2181
+      targetPort: 2181
+  selector:
+    io.kompose.service: zookeeper
+status:
+  loadBalancer: {}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: /snap/kompose/1/./kompose-linux-amd64 convert
+    kompose.version: 1.18.0 (06a2e56)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: zookeeper
+  name: zookeeper
+spec:
+  selector:
+    matchLabels:
+      io.kompose.service: zookeeper
+  replicas: 1
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        io.kompose.service: zookeeper
+    spec:
+      containers:
+        - image: eventuateio/eventuate-zookeeper:0.4.0.RELEASE
+          name: zookeeper
+          ports:
+            - containerPort: 2181
+          resources: {}
+      restartPolicy: Always
+status: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    kompose.cmd: /snap/kompose/1/./kompose-linux-amd64 convert
+    kompose.version: 1.18.0 (06a2e56)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: kafka
+  name: kafka
+spec:
+  ports:
+    - name: "9092"
+      port: 9092
+      targetPort: 9092
+  selector:
+    io.kompose.service: kafka
+status:
+  loadBalancer: {}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: /snap/kompose/1/./kompose-linux-amd64 convert
+    kompose.version: 1.18.0 (06a2e56)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: kafka
+  name: kafka
+spec:
+  selector:
+    matchLabels:
+      io.kompose.service: kafka
+  replicas: 1
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        io.kompose.service: kafka
+    spec:
+      containers:
+        - env:
+            - name: ADVERTISED_HOST_NAME
+              value: 172.17.0.1
+            - name: KAFKA_HEAP_OPTS
+              value: -Xmx320m -Xms320m
+            - name: ZOOKEEPER_SERVERS
+              value: zookeeper:2181
+          image: eventuateio/eventuate-kafka:0.3.0.RELEASE
+          name: kafka
+          ports:
+            - containerPort: 9092
+          resources: {}
+      restartPolicy: Always
+status: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    kompose.cmd: /snap/kompose/1/./kompose-linux-amd64 convert
+    kompose.version: 1.18.0 (06a2e56)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: mysql
+  name: mysql
+spec:
+  ports:
+    - name: "3306"
+      port: 3306
+      targetPort: 3306
+  selector:
+    io.kompose.service: mysql
+status:
+  loadBalancer: {}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: /snap/kompose/1/./kompose-linux-amd64 convert
+    kompose.version: 1.18.0 (06a2e56)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: mysql
+  name: mysql
+spec:
+  selector:
+    matchLabels:
+      io.kompose.service: mysql
+  replicas: 1
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        io.kompose.service: mysql
+    spec:
+      containers:
+        - env:
+            - name: MYSQL_PASSWORD
+              value: mysqlpw
+            - name: MYSQL_ROOT_PASSWORD
+              value: rootpassword
+            - name: MYSQL_USER
+              value: mysqluser
+          image: eventuateio/eventuate-mysql:0.4.0.RELEASE
+          name: mysql
+          ports:
+            - containerPort: 3306
+          resources: {}
+      restartPolicy: Always
+status: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    kompose.cmd: /snap/kompose/1/./kompose-linux-amd64 convert
+    kompose.version: 1.18.0 (06a2e56)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: cdcservice
+  name: cdcservice
+spec:
+  ports:
+    - name: "8099"
+      port: 8099
+      targetPort: 8080
+  selector:
+    io.kompose.service: cdcservice
+status:
+  loadBalancer: {}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: /snap/kompose/1/./kompose-linux-amd64 convert
+    kompose.version: 1.18.0 (06a2e56)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: cdcservice
+  name: cdcservice
+spec:
+  selector:
+    matchLabels:
+      io.kompose.service: cdcservice
+  replicas: 1
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        io.kompose.service: cdcservice
+    spec:
+      containers:
+        - env:
+            - name: EVENTUATELOCAL_CDC_DB_PASSWORD
+              value: rootpassword
+            - name: EVENTUATELOCAL_CDC_DB_USER_NAME
+              value: root
+            - name: EVENTUATELOCAL_CDC_MAX_ATTEMPTS_FOR_POLLING
+              value: "100"
+            - name: EVENTUATELOCAL_CDC_MAX_EVENTS_PER_POLLING
+              value: "1000"
+            - name: EVENTUATELOCAL_CDC_MYSQL_BINLOG_CLIENT_UNIQUE_ID
+              value: "1234567890"
+            - name: EVENTUATELOCAL_CDC_OFFSET_STORE_KEY
+              value: MySqlBinlog
+            - name: EVENTUATELOCAL_CDC_POLLING_INTERVAL_IN_MILLISECONDS
+              value: "500"
+            - name: EVENTUATELOCAL_CDC_POLLING_RETRY_INTERVAL_IN_MILLISECONDS
+              value: "500"
+            - name: EVENTUATELOCAL_CDC_READER_NAME
+              value: MySqlReader
+            - name: EVENTUATELOCAL_CDC_READ_OLD_DEBEZIUM_DB_OFFSET_STORAGE_TOPIC
+              value: "false"
+            - name: EVENTUATELOCAL_KAFKA_BOOTSTRAP_SERVERS
+              value: kafka:9092
+            - name: EVENTUATELOCAL_ZOOKEEPER_CONNECTION_STRING
+              value: zookeeper:2181
+            - name: EVENTUATE_CDC_TYPE
+              value: EventuateLocal
+            - name: SPRING_DATASOURCE_DRIVER_CLASS_NAME
+              value: com.mysql.jdbc.Driver
+            - name: SPRING_DATASOURCE_PASSWORD
+              value: mysqlpw
+            - name: SPRING_DATASOURCE_URL
+              value: jdbc:mysql://mysql/eventuate
+            - name: SPRING_DATASOURCE_USERNAME
+              value: mysqluser
+            - name: SPRING_PROFILES_ACTIVE
+          image: eventuateio/eventuate-cdc-service:0.2.0.RELEASE
+          name: cdcservice
+          ports:
+            - containerPort: 8080
+          resources: {}
+      restartPolicy: Always
+status: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    kompose.cmd: /snap/kompose/1/./kompose-linux-amd64 convert
+    kompose.version: 1.18.0 (06a2e56)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: config-server
+  name: config-server
+spec:
+  ports:
+    - name: "8888"
+      port: 8888
+      targetPort: 8888
+  selector:
+    io.kompose.service: config-server
+status:
+  loadBalancer: {}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: /snap/kompose/1/./kompose-linux-amd64 convert
+    kompose.version: 1.18.0 (06a2e56)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: config-server
+  name: config-server
+spec:
+  selector:
+    matchLabels:
+      io.kompose.service: config-server
+  replicas: 1
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        io.kompose.service: config-server
+    spec:
+      containers:
+        - image: localhost:32000/config-server:latest
+          name: config-server
+          ports:
+            - containerPort: 8888
+          resources: {}
+      restartPolicy: Always
+status: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    kompose.cmd: /snap/kompose/1/./kompose-linux-amd64 convert
+    kompose.version: 1.18.0 (06a2e56)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: bartender-api
+  name: bartender-api
+spec:
+  ports:
+    - name: "8080"
+      port: 8080
+      targetPort: 8080
+  selector:
+    io.kompose.service: bartender-api
+status:
+  loadBalancer: {}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: /snap/kompose/1/./kompose-linux-amd64 convert
+    kompose.version: 1.18.0 (06a2e56)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: bartender-api
+  name: bartender-api
+spec:
+  selector:
+    matchLabels:
+      io.kompose.service: bartender-api
+  replicas: 1
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        io.kompose.service: bartender-api
+    spec:
+      containers:
+        - image: localhost:32000/bartender-api:latest
+          name: bartender-api
+          ports:
+            - containerPort: 8080
+          resources: {}
+      restartPolicy: Always
+status: {}
