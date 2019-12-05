@@ -8,7 +8,7 @@ Techniques
 * Eventsourcing
 
 Microservice API's
-* GraphQL
+* GraphQL | REST (Jersey)
 * Spring cloud config
 * Spring cloud sleuth
 * Spring cloud contracts
@@ -31,4 +31,4 @@ Links
 [Event Sourcing](http://eventuate.io/gettingstarted-es.html)
 
 WIP
-https://www.baeldung.com/spring-graphql
+Caused by: java.lang.RuntimeException: Driver com.mysql.jdbc.Driver claims to not accept jdbcUrl, jdbc:10.152.183.115://mysql/eventuate

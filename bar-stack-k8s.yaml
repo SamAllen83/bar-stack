@@ -346,7 +346,24 @@ spec:
         io.kompose.service: bartender-api
     spec:
       containers:
-        - image: localhost:32000/bartender-api:latest
+        - env:
+            - name: SPRING_DATASOURCE_URL
+              value: jdbc:10.152.183.115://mysql/eventuate
+            - name: SPRING_DATASOURCE_USERNAME
+              value: mysqluser
+            - name: SPRING_DATASOURCE_PASSWORD
+              value: mysqlpw
+            - name: SPRING_DATASOURCE_DRIVER_CLASS_NAME
+              value: com.mysql.jdbc.Driver
+            - name: EVENTUATELOCAL_KAFKA_BOOTSTRAP_SERVERS
+              value: 10.152.183.32:9092
+            - name: EVENTUATELOCAL_ZOOKEEPER_CONNECTION_STRING
+              value: 10.152.183.240:2181
+            - name: EVENTUATELOCAL_CDC_DB_USER_NAME
+              value: root
+            - name: EVENTUATELOCAL_CDC_DB_PASSWORD
+              value: rootpassword
+          image: localhost:32000/bartender-api:latest
           name: bartender-api
           ports:
             - containerPort: 8080
