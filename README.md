@@ -39,6 +39,3 @@ Links
 [We choose to have a BFF per micro frontend. This allowed us to provide more flexibility to the team. For example, the account domain team, has their own account BFF.](https://medium.com/passionate-people/my-experience-using-micro-frontends-e99a1ad6ed32)
 [Micro Frontends](https://martinfowler.com/articles/micro-frontends.html)
 [Event Sourcing](http://eventuate.io/gettingstarted-es.html)
-
-WIP
-Caused by: java.lang.RuntimeException: Driver com.mysql.jdbc.Driver claims to not accept jdbcUrl, jdbc:10.152.183.115://mysql/eventuate
