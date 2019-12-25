@@ -1,6 +1,9 @@
 # bar-stack
 ![Bar System](./docs/BarSystem.png)
 
+# Architecture
+![Architecture](./docs/Architecture.png)
+
 ## Microfrontends, microservices, eventsourcing and CQRS
 Techniques
 * Microfontends
