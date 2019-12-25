@@ -4,11 +4,19 @@
 # Architecture
 ![Architecture](./docs/Architecture.png)
 
-## Microfrontends, microservices, eventsourcing and CQRS
+## Techniques, Patterns and Technologies
 Techniques
 * Microfontends
+* API Gateway Per Microfrontend (Backends For Frontends (BFF))
 * Microservices
 * Eventsourcing
+* CQRS
+
+Microfrontends
+* NodeJs/Express
+
+API Gateway
+* Spring Cloud Gateway
 
 Microservice API's
 * GraphQL | REST (Jersey)
@@ -21,7 +29,6 @@ Microservice API's
 * Docker
 
 Network
-* Backends-for-front-ends (Spring Cloud Gateway) for each microfrontend
 * Istio service mesh
 * Kubernetes
 
