@@ -255,7 +255,8 @@ spec:
         io.kompose.service: config-server
     spec:
       containers:
-        - image: localhost:32000/config-server:latest
+        - image: config-server:latest
+          imagePullPolicy: IfNotPresent
           name: config-server
           ports:
             - containerPort: 8888
@@ -270,12 +271,13 @@ metadata:
     io.kompose.service: bartender-api
   name: bartender-api
 spec:
-  ports:
-    - name: "8080"
-      port: 8080
-      targetPort: 8080
   selector:
     io.kompose.service: bartender-api
+  type: NodePort
+  ports:
+    - port: 8080
+      nodePort: 30000
+      name: http
 status:
   loadBalancer: {}
 ---
@@ -299,6 +301,8 @@ spec:
     spec:
       containers:
         - env:
+            - name: LOGGING_LEVEL_ROOT
+              value: INFO
             - name: SPRING_DATASOURCE_URL
               value: jdbc:mysql://mysql.default.svc.cluster.local:3306/eventuate
             - name: SPRING_DATASOURCE_USERNAME
@@ -315,10 +319,61 @@ spec:
               value: root
             - name: EVENTUATELOCAL_CDC_DB_PASSWORD
               value: rootpassword
-          image: localhost:32000/bartender-api:latest
+          image: bartender-api:latest
+          imagePullPolicy: IfNotPresent
           name: bartender-api
           ports:
             - containerPort: 8080
+          resources: {}
+      restartPolicy: Always
+status: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    io.kompose.service: browse-drink-api-gateway
+  name: browse-drink-api-gateway
+spec:
+  selector:
+    io.kompose.service: browse-drink-api-gateway
+  type: NodePort
+  ports:
+    - port: 8081
+      nodePort: 30010
+      name: http
+status:
+  loadBalancer: {}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    io.kompose.service: browse-drink-api-gateway
+  name: browse-drink-api-gateway
+spec:
+  selector:
+    matchLabels:
+      io.kompose.service: browse-drink-api-gateway
+  replicas: 1
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        io.kompose.service: browse-drink-api-gateway
+    spec:
+      containers:
+        - env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: localk8s
+            - name: LOGGING_LEVEL_ROOT
+              value: INFO
+          image: browse-drink-api-gateway:latest
+          imagePullPolicy: IfNotPresent
+          name: browse-drink-api-gateway
+          ports:
+            - containerPort: 8081
           resources: {}
       restartPolicy: Always
 status: {}

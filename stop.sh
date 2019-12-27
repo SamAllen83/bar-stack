@@ -1,2 +1,2 @@
 #!/usr/bin/env bash
-kubectl delete -f bar-stack-k8s.yaml
+kubectl delete -f dockerdesktopk8s.yml
