@@ -56,8 +56,7 @@ Once the operator pods are running, you can cancel the above command by typing C
 ## Run locally
 1. Build everything and install images locally: ```./dockerdesktopk8s-build.sh```
 1. Run everything: ```./start.sh```
-1. Verify things are working.  Hit URL in browser: ```http://localhost:30010/browse```
-    1. expected result: ```{"data":{"orderDrink":{"customerName":"Sam","drinkName":null,"orderId":null}}}```
+1. Verify things are working.  Hit URL in browser: ```http://beveragebotbar.com/```
     
 ## Shutdown
 ```./stop.sh```
