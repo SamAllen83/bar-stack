@@ -40,6 +40,19 @@ Links
 [Micro Frontends](https://martinfowler.com/articles/micro-frontends.html)
 [Event Sourcing](http://eventuate.io/gettingstarted-es.html)
 
+## Onetime setup
+Map `beveragebotbar.com` to 127.0.0.1 in /etc/hosts
+
+You need to create an nginx ingress controller, this only needs to be done once (ever)
+```
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/mandatory.yaml
+
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/provider/cloud-generic.yaml
+
+kubectl get pods --all-namespaces -l app.kubernetes.io/name=ingress-nginx --watch
+ ```
+Once the operator pods are running, you can cancel the above command by typing Ctrl+C. Now, you are ready to create your first ingress.
+
 ## Run locally
 1. Build everything and install images locally: ```./dockerdesktopk8s-build.sh```
 1. Run everything: ```./start.sh```
