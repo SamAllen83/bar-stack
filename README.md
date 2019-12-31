@@ -1,7 +1,4 @@
-# bar-stack
-![Bar System](./docs/BarSystem.png)
-
-# Architecture
+# bar-stack Architecture
 ![Architecture](./docs/Architecture.png)
 
 ## Techniques, Patterns and Technologies
@@ -19,7 +16,7 @@ API Gateway
 * Spring Cloud Gateway
 
 Microservice API's
-* GraphQL | REST (Jersey)
+* GraphQL | REST (Jersey) | JMS
 * Spring cloud config
 * Spring cloud sleuth
 * Spring cloud contracts
