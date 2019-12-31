@@ -37,6 +37,27 @@ Links
 [Micro Frontends](https://martinfowler.com/articles/micro-frontends.html)
 [Event Sourcing](http://eventuate.io/gettingstarted-es.html)
 
+# Local Setup
+## Checkout Code
+```
+mkdir bar
+cd bar
+git clone https://github.com/SamAllen83/bar-stack.git
+git clone https://github.com/SamAllen83/bartender.git
+git clone https://github.com/SamAllen83/config-server.git
+git clone https://github.com/SamAllen83/browse-drink-ui.git
+git clone https://github.com/SamAllen83/drink-container-ui.git
+git clone https://github.com/SamAllen83/order-drink-ui.git
+git clone https://github.com/SamAllen83/order-drink-api-gateway.git
+git clone https://github.com/SamAllen83/browse-drink-api-gateway.git
+git clone https://github.com/SamAllen83/config-server.git
+cd bar-stack
+```
+
+## Kubernetes Using Docker For Mac
+Make sure Kubernetes is running on your Mac and docker-for-desktop context is selected so you can deploy to your local kubernetes.
+https://matthewpalmer.net/kubernetes-app-developer/articles/how-to-run-local-kubernetes-docker-for-mac.html
+
 ## Onetime setup
 Map `beveragebotbar.com` to 127.0.0.1 in /etc/hosts
 
