@@ -1,8 +1,9 @@
 #Ingress
+#mfe-ingress
 apiVersion: networking.k8s.io/v1beta1
 kind: Ingress
 metadata:
-  name: beveragebotbar-ingress
+  name: mfe-ingress
   annotations:
     nginx.ingress.kubernetes.io/rewrite-target: /$1
 spec:
@@ -11,14 +12,6 @@ spec:
     http:
       paths:
         #In NGINX, regular expressions follow a first match policy. In order to enable more accurate path matching, ingress-nginx first orders the paths by descending length before writing them to the NGINX template as location blocks.
-      - path: /browse/api(.*)
-        backend:
-          serviceName: browse-drink-api-gateway
-          servicePort: 8081
-      - path: /order/api(.*)
-        backend:
-          serviceName: order-drink-api-gateway
-          servicePort: 8082
       - path: /browse(.*)
         backend:
           serviceName: browse-drink-ui
@@ -35,6 +28,26 @@ spec:
         backend:
           serviceName: drink-container-ui
           servicePort: 3000
+---
+#bff-ingress
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  name: bff-ingress
+spec:
+  rules:
+  - host: beveragebotbar.com
+    http:
+      paths:
+        #In NGINX, regular expressions follow a first match policy. In order to enable more accurate path matching, ingress-nginx first orders the paths by descending length before writing them to the NGINX template as location blocks.
+      - path: /browse/api
+        backend:
+          serviceName: browse-drink-api-gateway
+          servicePort: 8081
+      - path: /order/api
+        backend:
+          serviceName: order-drink-api-gateway
+          servicePort: 8082
 ---
 #Micro Front Ends (MFEs)
 #drink-container-ui
@@ -363,24 +376,8 @@ spec:
     spec:
       containers:
         - env:
-            - name: LOGGING_LEVEL_ROOT
-              value: INFO
-            - name: SPRING_DATASOURCE_URL
-              value: jdbc:mysql://mysql.default.svc.cluster.local:3306/eventuate
-            - name: SPRING_DATASOURCE_USERNAME
-              value: mysqluser
-            - name: SPRING_DATASOURCE_PASSWORD
-              value: mysqlpw
-            - name: SPRING_DATASOURCE_DRIVER_CLASS_NAME
-              value: com.mysql.jdbc.Driver
-            - name: EVENTUATELOCAL_KAFKA_BOOTSTRAP_SERVERS
-              value: kafka.default.svc.cluster.local:9092
-            - name: EVENTUATELOCAL_ZOOKEEPER_CONNECTION_STRING
-              value: zookeeper.default.svc.cluster.local:2181
-            - name: EVENTUATELOCAL_CDC_DB_USER_NAME
-              value: root
-            - name: EVENTUATELOCAL_CDC_DB_PASSWORD
-              value: rootpassword
+            - name: SPRING_PROFILES_ACTIVE
+              value: localk8s
           image: bartender-api:latest
           imagePullPolicy: IfNotPresent
           name: bartender-api
@@ -399,12 +396,13 @@ metadata:
     io.kompose.service: config-server
   name: config-server
 spec:
-  ports:
-    - name: "8888"
-      port: 8888
-      targetPort: 8888
   selector:
     io.kompose.service: config-server
+  type: NodePort
+  ports:
+    - port: 8888
+      nodePort: 30888
+      name: "config-server-port"
 status:
   loadBalancer: {}
 ---
@@ -444,12 +442,13 @@ metadata:
     io.kompose.service: zookeeper
   name: zookeeper
 spec:
-  ports:
-    - name: "2181"
-      port: 2181
-      targetPort: 2181
   selector:
     io.kompose.service: zookeeper
+  type: NodePort
+  ports:
+    - port: 2181
+      nodePort: 30181
+      name: "zookeeper-port"
 status:
   loadBalancer: {}
 ---
@@ -488,12 +487,13 @@ metadata:
     io.kompose.service: kafka
   name: kafka
 spec:
-  ports:
-    - name: "9092"
-      port: 9092
-      targetPort: 9092
   selector:
     io.kompose.service: kafka
+  type: NodePort
+  ports:
+    - port: 9092
+      nodePort: 30092
+      name: "kafka-port"
 status:
   loadBalancer: {}
 ---
@@ -539,12 +539,13 @@ metadata:
     io.kompose.service: mysql
   name: mysql
 spec:
-  ports:
-    - name: "3306"
-      port: 3306
-      targetPort: 3306
   selector:
-    io.kompose.service: mysql
+      io.kompose.service: mysql
+  type: NodePort
+  ports:
+    - port: 3306
+      nodePort: 30306
+      name: "mysql-port"
 status:
   loadBalancer: {}
 ---
@@ -654,6 +655,7 @@ spec:
             - name: SPRING_DATASOURCE_USERNAME
               value: mysqluser
             - name: SPRING_PROFILES_ACTIVE
+              value: localk8s
           image: eventuateio/eventuate-cdc-service:0.2.0.RELEASE
           name: cdcservice
           ports:
