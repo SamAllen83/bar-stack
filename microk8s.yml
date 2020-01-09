@@ -1,3 +1,440 @@
+#Ingress
+#mfe-ingress
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  name: mfe-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /$1
+spec:
+  rules:
+    - host: beveragebotbar.com
+      http:
+        paths:
+          #In NGINX, regular expressions follow a first match policy. In order to enable more accurate path matching, ingress-nginx first orders the paths by descending length before writing them to the NGINX template as location blocks.
+          - path: /browse(.*)
+            backend:
+              serviceName: browse-drink-ui
+              servicePort: 3001
+          - path: /content(.*)
+            backend:
+              serviceName: content
+              servicePort: 5000
+          - path: /order(.*)
+            backend:
+              serviceName: order-drink-ui
+              servicePort: 3002
+          - path: /(.*)
+            backend:
+              serviceName: drink-container-ui
+              servicePort: 3000
+---
+#bff-ingress
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  name: bff-ingress
+spec:
+  rules:
+    - host: beveragebotbar.com
+      http:
+        paths:
+          #In NGINX, regular expressions follow a first match policy. In order to enable more accurate path matching, ingress-nginx first orders the paths by descending length before writing them to the NGINX template as location blocks.
+          - path: /browse/api
+            backend:
+              serviceName: browse-drink-api-gateway
+              servicePort: 8081
+          - path: /order/api
+            backend:
+              serviceName: order-drink-api-gateway
+              servicePort: 8082
+---
+#Micro Front Ends (MFEs)
+#drink-container-ui
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    io.kompose.service: drink-container-ui
+  name: drink-container-ui
+spec:
+  selector:
+    io.kompose.service: drink-container-ui
+  type: NodePort
+  ports:
+    - port: 3000
+      nodePort: 31000
+      name: http
+status:
+  loadBalancer: {}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    io.kompose.service: drink-container-ui
+  name: drink-container-ui
+spec:
+  selector:
+    matchLabels:
+      io.kompose.service: drink-container-ui
+  replicas: 1
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        io.kompose.service: drink-container-ui
+    spec:
+      containers:
+        - image: localhost:32000/drink-container-ui:latest
+          imagePullPolicy: Always
+          name: drink-container-ui
+          ports:
+            - containerPort: 3000
+          resources: {}
+      restartPolicy: Always
+status: {}
+---
+#browse-drink-ui
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    io.kompose.service: browse-drink-ui
+  name: browse-drink-ui
+spec:
+  selector:
+    io.kompose.service: browse-drink-ui
+  type: NodePort
+  ports:
+    - port: 3001
+      nodePort: 30001
+      name: http
+status:
+  loadBalancer: {}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    io.kompose.service: browse-drink-ui
+  name: browse-drink-ui
+spec:
+  selector:
+    matchLabels:
+      io.kompose.service: browse-drink-ui
+  replicas: 1
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        io.kompose.service: browse-drink-ui
+    spec:
+      containers:
+        - image: localhost:32000/browse-drink-ui:latest
+          imagePullPolicy: Always
+          name: browse-drink-ui
+          ports:
+            - containerPort: 3001
+          resources: {}
+      restartPolicy: Always
+status: {}
+---
+#order-drink-ui
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    io.kompose.service: order-drink-ui
+  name: order-drink-ui
+spec:
+  selector:
+    io.kompose.service: order-drink-ui
+  type: NodePort
+  ports:
+    - port: 3002
+      nodePort: 30002
+      name: http
+status:
+  loadBalancer: {}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    io.kompose.service: order-drink-ui
+  name: order-drink-ui
+spec:
+  selector:
+    matchLabels:
+      io.kompose.service: order-drink-ui
+  replicas: 1
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        io.kompose.service: order-drink-ui
+    spec:
+      containers:
+        - image: localhost:32000/order-drink-ui:latest
+          imagePullPolicy: Always
+          name: order-drink-ui
+          ports:
+            - containerPort: 3002
+          resources: {}
+      restartPolicy: Always
+status: {}
+---
+#content
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    io.kompose.service: content
+  name: content
+spec:
+  selector:
+    io.kompose.service: content
+  type: NodePort
+  ports:
+    - port: 5000
+      nodePort: 30500
+      name: http
+status:
+  loadBalancer: {}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    io.kompose.service: content
+  name: content
+spec:
+  selector:
+    matchLabels:
+      io.kompose.service: content
+  replicas: 1
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        io.kompose.service: content
+    spec:
+      containers:
+        - image: localhost:32000/content:latest
+          imagePullPolicy: Always
+          name: content
+          ports:
+            - containerPort: 5000
+          resources: {}
+      restartPolicy: Always
+status: {}
+---
+#API Gateways (each micro-front-end [MFE] gets its own backend-for-frontend [BFF] api gateway)
+#browse-drink-api-gateway
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    io.kompose.service: browse-drink-api-gateway
+  name: browse-drink-api-gateway
+spec:
+  selector:
+    io.kompose.service: browse-drink-api-gateway
+  type: NodePort
+  ports:
+    - port: 8081
+      nodePort: 30081
+      name: http
+status:
+  loadBalancer: {}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    io.kompose.service: browse-drink-api-gateway
+  name: browse-drink-api-gateway
+spec:
+  selector:
+    matchLabels:
+      io.kompose.service: browse-drink-api-gateway
+  replicas: 1
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        io.kompose.service: browse-drink-api-gateway
+    spec:
+      containers:
+        - env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: localk8s
+            - name: LOGGING_LEVEL_ROOT
+              value: INFO
+          image: localhost:32000/browse-drink-api-gateway:latest
+          imagePullPolicy: Always
+          name: browse-drink-api-gateway
+          ports:
+            - containerPort: 8081
+          resources: {}
+      restartPolicy: Always
+status: {}
+---
+#order-drink-api-gateway
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    io.kompose.service: order-drink-api-gateway
+  name: order-drink-api-gateway
+spec:
+  selector:
+    io.kompose.service: order-drink-api-gateway
+  type: NodePort
+  ports:
+    - port: 8082
+      nodePort: 30082
+      name: http
+status:
+  loadBalancer: {}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    io.kompose.service: order-drink-api-gateway
+  name: order-drink-api-gateway
+spec:
+  selector:
+    matchLabels:
+      io.kompose.service: order-drink-api-gateway
+  replicas: 1
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        io.kompose.service: order-drink-api-gateway
+    spec:
+      containers:
+        - env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: localk8s
+            - name: LOGGING_LEVEL_ROOT
+              value: INFO
+          image: localhost:32000/order-drink-api-gateway:latest
+          imagePullPolicy: Always
+          name: order-drink-api-gateway
+          ports:
+            - containerPort: 8082
+          resources: {}
+      restartPolicy: Always
+status: {}
+---
+#Microservices
+#bartender-api
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    io.kompose.service: bartender-api
+  name: bartender-api
+spec:
+  selector:
+    io.kompose.service: bartender-api
+  type: NodePort
+  ports:
+    - port: 8080
+      nodePort: 30080
+      name: http
+status:
+  loadBalancer: {}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    io.kompose.service: bartender-api
+  name: bartender-api
+spec:
+  selector:
+    matchLabels:
+      io.kompose.service: bartender-api
+  replicas: 1
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        io.kompose.service: bartender-api
+    spec:
+      containers:
+        - env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: localk8s
+          image: localhost:32000/bartender-api:latest
+          imagePullPolicy: Always
+          name: bartender-api
+          ports:
+            - containerPort: 8080
+          resources: {}
+      restartPolicy: Always
+status: {}
+---
+#Platform Services
+#config-server
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    io.kompose.service: config-server
+  name: config-server
+spec:
+  selector:
+    io.kompose.service: config-server
+  type: NodePort
+  ports:
+    - port: 8888
+      nodePort: 30888
+      name: "config-server-port"
+status:
+  loadBalancer: {}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    io.kompose.service: config-server
+  name: config-server
+spec:
+  selector:
+    matchLabels:
+      io.kompose.service: config-server
+  replicas: 1
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        io.kompose.service: config-server
+    spec:
+      containers:
+        - image: localhost:32000/config-server:latest
+          imagePullPolicy: Always
+          name: config-server
+          ports:
+            - containerPort: 8888
+          resources: {}
+      restartPolicy: Always
+status: {}
+---
+#zookeeper
 apiVersion: v1
 kind: Service
 metadata:
@@ -5,12 +442,13 @@ metadata:
     io.kompose.service: zookeeper
   name: zookeeper
 spec:
-  ports:
-    - name: "2181"
-      port: 2181
-      targetPort: 2181
   selector:
     io.kompose.service: zookeeper
+  type: NodePort
+  ports:
+    - port: 2181
+      nodePort: 30181
+      name: "zookeeper-port"
 status:
   loadBalancer: {}
 ---
@@ -41,6 +479,7 @@ spec:
       restartPolicy: Always
 status: {}
 ---
+#kafka
 apiVersion: v1
 kind: Service
 metadata:
@@ -48,12 +487,13 @@ metadata:
     io.kompose.service: kafka
   name: kafka
 spec:
-  ports:
-    - name: "9092"
-      port: 9092
-      targetPort: 9092
   selector:
     io.kompose.service: kafka
+  type: NodePort
+  ports:
+    - port: 9092
+      nodePort: 30092
+      name: "kafka-port"
 status:
   loadBalancer: {}
 ---
@@ -91,6 +531,7 @@ spec:
       restartPolicy: Always
 status: {}
 ---
+#mysql
 apiVersion: v1
 kind: Service
 metadata:
@@ -98,12 +539,13 @@ metadata:
     io.kompose.service: mysql
   name: mysql
 spec:
-  ports:
-    - name: "3306"
-      port: 3306
-      targetPort: 3306
   selector:
     io.kompose.service: mysql
+  type: NodePort
+  ports:
+    - port: 3306
+      nodePort: 30306
+      name: "mysql-port"
 status:
   loadBalancer: {}
 ---
@@ -141,6 +583,7 @@ spec:
       restartPolicy: Always
 status: {}
 ---
+#cdcservice
 apiVersion: v1
 kind: Service
 metadata:
@@ -212,168 +655,11 @@ spec:
             - name: SPRING_DATASOURCE_USERNAME
               value: mysqluser
             - name: SPRING_PROFILES_ACTIVE
+              value: localk8s
           image: eventuateio/eventuate-cdc-service:0.2.0.RELEASE
           name: cdcservice
           ports:
             - containerPort: 8080
-          resources: {}
-      restartPolicy: Always
-status: {}
----
-apiVersion: v1
-kind: Service
-metadata:
-  labels:
-    io.kompose.service: config-server
-  name: config-server
-spec:
-  ports:
-    - name: "8888"
-      port: 8888
-      targetPort: 8888
-  selector:
-    io.kompose.service: config-server
-status:
-  loadBalancer: {}
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  labels:
-    io.kompose.service: config-server
-  name: config-server
-spec:
-  selector:
-    matchLabels:
-      io.kompose.service: config-server
-  replicas: 1
-  strategy: {}
-  template:
-    metadata:
-      creationTimestamp: null
-      labels:
-        io.kompose.service: config-server
-    spec:
-      containers:
-        - image: localhost:32000/config-server:latest
-          imagePullPolicy: IfNotPresent
-          name: config-server
-          ports:
-            - containerPort: 8888
-          resources: {}
-      restartPolicy: Always
-status: {}
----
-apiVersion: v1
-kind: Service
-metadata:
-  labels:
-    io.kompose.service: bartender-api
-  name: bartender-api
-spec:
-  selector:
-    io.kompose.service: bartender-api
-  type: NodePort
-  ports:
-    - port: 8080
-      nodePort: 30000
-      name: http
-status:
-  loadBalancer: {}
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  labels:
-    io.kompose.service: bartender-api
-  name: bartender-api
-spec:
-  selector:
-    matchLabels:
-      io.kompose.service: bartender-api
-  replicas: 1
-  strategy: {}
-  template:
-    metadata:
-      creationTimestamp: null
-      labels:
-        io.kompose.service: bartender-api
-    spec:
-      containers:
-        - env:
-            - name: LOGGING_LEVEL_ROOT
-              value: INFO
-            - name: SPRING_DATASOURCE_URL
-              value: jdbc:mysql://mysql.default.svc.cluster.local:3306/eventuate
-            - name: SPRING_DATASOURCE_USERNAME
-              value: mysqluser
-            - name: SPRING_DATASOURCE_PASSWORD
-              value: mysqlpw
-            - name: SPRING_DATASOURCE_DRIVER_CLASS_NAME
-              value: com.mysql.jdbc.Driver
-            - name: EVENTUATELOCAL_KAFKA_BOOTSTRAP_SERVERS
-              value: kafka.default.svc.cluster.local:9092
-            - name: EVENTUATELOCAL_ZOOKEEPER_CONNECTION_STRING
-              value: zookeeper.default.svc.cluster.local:2181
-            - name: EVENTUATELOCAL_CDC_DB_USER_NAME
-              value: root
-            - name: EVENTUATELOCAL_CDC_DB_PASSWORD
-              value: rootpassword
-          image: localhost:32000/bartender-api:latest
-          imagePullPolicy: IfNotPresent
-          name: bartender-api
-          ports:
-            - containerPort: 8080
-          resources: {}
-      restartPolicy: Always
-status: {}
----
-apiVersion: v1
-kind: Service
-metadata:
-  labels:
-    io.kompose.service: browse-drink-api-gateway
-  name: browse-drink-api-gateway
-spec:
-  selector:
-    io.kompose.service: browse-drink-api-gateway
-  type: NodePort
-  ports:
-    - port: 8081
-      nodePort: 30010
-      name: http
-status:
-  loadBalancer: {}
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  labels:
-    io.kompose.service: browse-drink-api-gateway
-  name: browse-drink-api-gateway
-spec:
-  selector:
-    matchLabels:
-      io.kompose.service: browse-drink-api-gateway
-  replicas: 1
-  strategy: {}
-  template:
-    metadata:
-      creationTimestamp: null
-      labels:
-        io.kompose.service: browse-drink-api-gateway
-    spec:
-      containers:
-        - env:
-            - name: SPRING_PROFILES_ACTIVE
-              value: localk8s
-            - name: LOGGING_LEVEL_ROOT
-              value: INFO
-          image: localhost:32000/browse-drink-api-gateway:latest
-          imagePullPolicy: IfNotPresent
-          name: browse-drink-api-gateway
-          ports:
-            - containerPort: 8081
           resources: {}
       restartPolicy: Always
 status: {}

@@ -6,3 +6,4 @@
 (cd ../order-drink-api-gateway && ./dockerdesktopk8s-build.sh)
 (cd ../browse-drink-ui && ./dockerdesktopk8s-build.sh)
 (cd ../order-drink-ui && ./dockerdesktopk8s-build.sh)
+(cd ../content && ./dockerdesktopk8s-build.sh)
