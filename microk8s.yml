@@ -1,53 +1,67 @@
 #Ingress
-#mfe-ingress
 apiVersion: networking.k8s.io/v1beta1
 kind: Ingress
 metadata:
-  name: mfe-ingress
-  annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /$1
+  name: ingress
 spec:
   rules:
     - host: beveragebotbar.com
       http:
         paths:
-          #In NGINX, regular expressions follow a first match policy. In order to enable more accurate path matching, ingress-nginx first orders the paths by descending length before writing them to the NGINX template as location blocks.
-          - path: /browse(.*)
-            backend:
-              serviceName: browse-drink-ui
-              servicePort: 3001
-          - path: /content(.*)
-            backend:
-              serviceName: content
-              servicePort: 5000
-          - path: /order(.*)
-            backend:
-              serviceName: order-drink-ui
-              servicePort: 3002
-          - path: /(.*)
-            backend:
-              serviceName: drink-container-ui
-              servicePort: 3000
+          - backend:
+              serviceName: app-delivery-api-gateway
+              servicePort: 8083
 ---
-#bff-ingress
-apiVersion: networking.k8s.io/v1beta1
-kind: Ingress
+#app-delivery-api-gateway
+apiVersion: v1
+kind: Service
 metadata:
-  name: bff-ingress
+  labels:
+    io.kompose.service: app-delivery-api-gateway
+  name: app-delivery-api-gateway
 spec:
-  rules:
-    - host: beveragebotbar.com
-      http:
-        paths:
-          #In NGINX, regular expressions follow a first match policy. In order to enable more accurate path matching, ingress-nginx first orders the paths by descending length before writing them to the NGINX template as location blocks.
-          - path: /browse/api
-            backend:
-              serviceName: browse-drink-api-gateway
-              servicePort: 8081
-          - path: /order/api
-            backend:
-              serviceName: order-drink-api-gateway
-              servicePort: 8082
+  selector:
+    io.kompose.service: app-delivery-api-gateway
+  type: NodePort
+  ports:
+    - port: 8083
+      nodePort: 30083
+      name: http
+status:
+  loadBalancer: {}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    io.kompose.service: app-delivery-api-gateway
+  name: app-delivery-api-gateway
+spec:
+  selector:
+    matchLabels:
+      io.kompose.service: app-delivery-api-gateway
+  replicas: 1
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        io.kompose.service: app-delivery-api-gateway
+    spec:
+      containers:
+        - env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: localk8s
+            - name: LOGGING_LEVEL_ROOT
+              value: INFO
+          image: localhost:32000/app-delivery-api-gateway:latest
+          imagePullPolicy: Always
+          name: app-delivery-api-gateway
+          ports:
+            - containerPort: 8083
+          resources: {}
+      restartPolicy: Always
+status: {}
 ---
 #Micro Front Ends (MFEs)
 #drink-container-ui
