@@ -7,3 +7,4 @@
 (cd ../browse-drink-ui && ./microk8s-build.sh)
 (cd ../order-drink-ui && ./microk8s-build.sh)
 (cd ../content && ./microk8s-build.sh)
+(cd ../app-delivery-api-gateway && ./microk8s-build.sh)

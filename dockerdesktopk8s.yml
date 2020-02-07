@@ -2,15 +2,15 @@
 apiVersion: networking.k8s.io/v1beta1
 kind: Ingress
 metadata:
-  name: ingress
+  name: mfe-ingress
 spec:
   rules:
-    - host: beveragebotbar.com
-      http:
-        paths:
-          - backend:
-              serviceName: app-delivery-api-gateway
-              servicePort: 8083
+  - host: beveragebotbar.com
+    http:
+      paths:
+      - backend:
+          serviceName: app-delivery-api-gateway
+          servicePort: 8083
 ---
 #app-delivery-api-gateway
 apiVersion: v1
@@ -55,7 +55,7 @@ spec:
             - name: LOGGING_LEVEL_ROOT
               value: DEBUG
           image: app-delivery-api-gateway:latest
-          imagePullPolicy: Always
+          imagePullPolicy: IfNotPresent
           name: app-delivery-api-gateway
           ports:
             - containerPort: 8083
